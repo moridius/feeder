@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 
 from TwitterScraper import TwitterScraper
+from LindwurmScraper import LindwurmScraper
 from feedgen.feed import FeedGenerator
 import argparse
 import sys
 
-class UnsupportedService( Exception ):
-    def __init__(self,*args,**kwargs):
+class UnsupportedService( NotImplementedError ):
+    def __init__( self, *args, **kwargs ):
         Exception.__init__( self, *args, **kwargs )        
 
 class Feeder():
@@ -16,12 +17,17 @@ class Feeder():
             scraper = TwitterScraper( url )
             if title == '':
                 title = "Twitter: @" + url.split('/')[3]
+        elif url.startswith( "http://www.lindwurm-linden.de/termine" ):
+            scraper = LindwurmScraper( url )
+            if title == '':
+                title = "Lindwurm: Termine"
         else:
             raise UnsupportedService( "No scraper found for this URL." )
 
         self.feed = FeedGenerator()        
         self.feed.id( url )
         self.feed.title( title )
+        self.feed.author( { "name": url } )
 
         if feedURL != '':
             self.feed.link( href=feedURL, rel='self' )
@@ -47,3 +53,4 @@ if __name__ == "__main__":
         print( feeder.GetAtom() )
     except UnsupportedService:
         print( "This service is not supported.", file=sys.stderr )
+        sys.exit(1)
